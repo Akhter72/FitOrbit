@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   LayoutDashboard, 
   Users, 
@@ -29,9 +29,18 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("user");
+    if (stored) {
+      setUser(JSON.parse(stored));
+    }
+  }, []);
 
   const handleLogout = () => {
-    // Perform any logout logic here before redirecting
+    localStorage.removeItem("user");
+    document.cookie = "fitorbit_token=; path=/; max-age=0;";
     router.push("/sign-in");
   };
 
@@ -39,14 +48,21 @@ export default function Sidebar() {
     <>
       <div className="hidden lg:flex lg:flex-col lg:w-72 lg:fixed lg:inset-y-0 bg-card border-r border-border shadow-sm">
         {/* Brand */}
-        <div className="flex items-center h-20 px-8 border-b border-border/50">
+        <div className="flex flex-col justify-center h-24 px-8 border-b border-border/50">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground font-bold text-xl shadow-lg shadow-primary/20 ring-1 ring-primary/50">
+            <div className="w-10 h-10 shrink-0 rounded-xl bg-primary flex items-center justify-center text-primary-foreground font-bold text-xl shadow-lg shadow-primary/20 ring-1 ring-primary/50">
               F
             </div>
-            <span className="text-2xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
-              FitOrbit
-            </span>
+            <div className="flex flex-col min-w-0">
+              <span className="text-2xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent leading-none">
+                FitOrbit
+              </span>
+              {user?.gym?.name && (
+                <span className="text-xs text-muted-foreground font-medium mt-1.5 truncate">
+                  {user.gym.name}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
@@ -92,15 +108,15 @@ export default function Sidebar() {
             onClick={() => setIsLogoutModalOpen(true)}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-secondary/30 hover:bg-secondary transition-colors cursor-pointer group text-left"
           >
-            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
-              A
+            <div className="w-10 h-10 shrink-0 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold uppercase">
+              {user?.email?.charAt(0) || "A"}
             </div>
             <div className="flex-1 overflow-hidden">
               <p className="text-sm font-medium truncate text-foreground">
-                Admin User
+                {user?.gym?.ownerName || "Admin User"}
               </p>
               <p className="text-xs truncate text-muted-foreground">
-                admin@fitorbit.com
+                {user?.email || "admin@fitorbit.com"}
               </p>
             </div>
             <LogOut className="w-4 h-4 text-muted-foreground group-hover:text-destructive transition-colors ml-auto shrink-0" />

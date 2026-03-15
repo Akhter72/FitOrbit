@@ -1,11 +1,50 @@
 "use client";
 
-import { Dumbbell, ArrowRight } from "lucide-react";
+import { Dumbbell, ArrowRight, Loader2, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, Suspense } from "react";
 
-export default function SignInPage() {
+function SignInForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const registered = searchParams.get("registered");
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+
+    const formData = new FormData(e.currentTarget);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      
+      const result = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(result.message || "Failed to sign in.");
+      }
+      
+      // Temporary token storage for dashboard checking
+      document.cookie = `fitorbit_token=${result.token}; path=/; max-age=604800; samesite=strict`;
+      localStorage.setItem("user", JSON.stringify(result.user));
+      
+      router.push("/");
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-background text-foreground">
@@ -67,23 +106,32 @@ export default function SignInPage() {
             <p className="text-muted-foreground">Please enter your details to sign in.</p>
           </div>
 
-          <form 
-            className="space-y-6" 
-            onSubmit={(e) => {
-              e.preventDefault();
-              router.push("/");
-            }}
-          >
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            {registered && (
+              <div className="p-4 flex items-center gap-3 text-sm font-medium bg-emerald-500/10 text-emerald-500 rounded-xl border border-emerald-500/20">
+                <CheckCircle2 className="w-5 h-5" />
+                Account created successfully! Please sign in.
+              </div>
+            )}
+            
+            {error && (
+               <div className="p-3 text-sm font-medium bg-destructive/10 text-destructive rounded-xl border border-destructive/20">
+                {error}
+              </div>
+            )}
+
             <div className="space-y-2">
               <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="email">
                 Email
               </label>
               <input
                 id="email"
+                name="email"
                 type="email"
                 placeholder="name@example.com"
                 className="flex h-12 w-full rounded-xl border border-border bg-card px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary disabled:cursor-not-allowed disabled:opacity-50 transition-shadow hover:shadow-sm"
                 required
+                disabled={isLoading}
               />
             </div>
 
@@ -92,16 +140,18 @@ export default function SignInPage() {
                 <label className="text-sm font-medium leading-none" htmlFor="password">
                   Password
                 </label>
-                <Link href="#" className="text-sm text-primary hover:underline font-medium">
+                <Link href="/forgot-password" className="text-sm text-primary hover:underline font-medium">
                   Forgot password?
                 </Link>
               </div>
               <input
                 id="password"
+                name="password"
                 type="password"
                 placeholder="••••••••"
                 className="flex h-12 w-full rounded-xl border border-border bg-card px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary disabled:cursor-not-allowed disabled:opacity-50 transition-shadow hover:shadow-sm"
                 required
+                disabled={isLoading}
               />
             </div>
 
@@ -110,6 +160,7 @@ export default function SignInPage() {
                 type="checkbox" 
                 id="remember" 
                 className="h-4 w-4 rounded border-border text-primary focus:ring-primary bg-card"
+                disabled={isLoading}
               />
               <label
                 htmlFor="remember"
@@ -121,10 +172,20 @@ export default function SignInPage() {
 
             <button
               type="submit"
-              className="inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-[0.98]"
+              disabled={isLoading}
+              className="inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-70 disabled:pointer-events-none"
             >
-              Sign In
-              <ArrowRight className="ml-2 w-4 h-4" />
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                  Signing In...
+                </>
+              ) : (
+                <>
+                  Sign In
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </>
+              )}
             </button>
           </form>
 
@@ -137,5 +198,13 @@ export default function SignInPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
+      <SignInForm />
+    </Suspense>
   );
 }
