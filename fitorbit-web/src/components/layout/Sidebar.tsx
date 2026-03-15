@@ -8,9 +8,9 @@ import {
   CalendarDays, 
   CreditCard, 
   Settings,
-  Bell,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  X
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -20,12 +20,11 @@ const navItems = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Members", href: "/members", icon: Users },
   { name: "Trainers", href: "/trainers", icon: Dumbbell },
-  { name: "Attendance", href: "/attendance", icon: CalendarDays },
   { name: "Payments", href: "/payments", icon: CreditCard },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
@@ -46,9 +45,20 @@ export default function Sidebar() {
 
   return (
     <>
-      <div className="hidden lg:flex lg:flex-col lg:w-72 lg:fixed lg:inset-y-0 bg-card border-r border-border shadow-sm">
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm lg:hidden animate-in fade-in duration-200"
+          onClick={onClose}
+        />
+      )}
+
+      {/* Sidebar Container */}
+      <div className={`fixed inset-y-0 left-0 z-50 w-72 bg-card border-r border-border shadow-sm flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+        isOpen ? "translate-x-0" : "-translate-x-full"
+      }`}>
         {/* Brand */}
-        <div className="flex flex-col justify-center h-24 px-8 border-b border-border/50">
+        <div className="flex flex-col justify-center h-20 px-6 border-b border-border/50 relative">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 shrink-0 rounded-xl bg-primary flex items-center justify-center text-primary-foreground font-bold text-xl shadow-lg shadow-primary/20 ring-1 ring-primary/50">
               F
@@ -64,6 +74,13 @@ export default function Sidebar() {
               )}
             </div>
           </div>
+          {/* Mobile Close btn inside sidebar */}
+          <button 
+            onClick={onClose}
+            className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-lg text-muted-foreground hover:bg-secondary lg:hidden"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Navigation */}
@@ -80,6 +97,9 @@ export default function Sidebar() {
               <Link
                 key={item.name}
                 href={item.href}
+                onClick={() => {
+                  if (onClose) onClose();
+                }}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all group ${
                   isActive
                     ? "bg-primary/10 text-primary"

@@ -1,15 +1,21 @@
 "use client";
 
-import { Bell, Search } from "lucide-react";
+import { Bell, Search, Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
 
-export default function Header() {
+export default function Header({ onOpenSidebar }: { onOpenSidebar?: () => void }) {
   const pathname = usePathname();
 
   return (
     <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border/50 h-20 flex items-center justify-between px-8">
       {/* Mobile Menu Button - hidden on desktop */}
       <div className="lg:hidden flex items-center gap-4">
+        <button 
+          onClick={onOpenSidebar}
+          className="p-2 -ml-2 rounded-xl hover:bg-secondary text-foreground transition-colors"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
         <span className="text-xl font-bold bg-gradient-to-br from-primary to-primary/70 bg-clip-text text-transparent">
           FitOrbit
         </span>
