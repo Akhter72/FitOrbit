@@ -1,11 +1,43 @@
 "use client";
 
-import { Dumbbell, ArrowRight } from "lucide-react";
+import { Dumbbell, ArrowRight, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function SignUpPage() {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+
+    const formData = new FormData(e.currentTarget);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      
+      const result = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(result.message || "Failed to register.");
+      }
+      
+      router.push("/sign-in?registered=true");
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-background text-foreground">
@@ -64,11 +96,13 @@ export default function SignUpPage() {
 
           <form 
             className="space-y-5" 
-            onSubmit={(e) => {
-              e.preventDefault();
-              router.push("/");
-            }}
+            onSubmit={handleSubmit}
           >
+            {error && (
+              <div className="p-3 text-sm font-medium bg-destructive/10 text-destructive rounded-xl border border-destructive/20">
+                {error}
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium leading-none" htmlFor="firstName">
@@ -76,9 +110,11 @@ export default function SignUpPage() {
                 </label>
                 <input
                   id="firstName"
+                  name="firstName"
                   placeholder="John"
                   className="flex h-12 w-full rounded-xl border border-border bg-card px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-shadow hover:shadow-sm"
                   required
+                  disabled={isLoading}
                 />
               </div>
               <div className="space-y-2">
@@ -87,9 +123,11 @@ export default function SignUpPage() {
                 </label>
                 <input
                   id="lastName"
+                  name="lastName"
                   placeholder="Doe"
                   className="flex h-12 w-full rounded-xl border border-border bg-card px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-shadow hover:shadow-sm"
                   required
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -100,9 +138,11 @@ export default function SignUpPage() {
               </label>
               <input
                 id="gymName"
+                name="gymName"
                 placeholder="Apex Fitness"
                 className="flex h-12 w-full rounded-xl border border-border bg-card px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-shadow hover:shadow-sm"
                 required
+                disabled={isLoading}
               />
             </div>
 
@@ -112,10 +152,12 @@ export default function SignUpPage() {
               </label>
               <input
                 id="email"
+                name="email"
                 type="email"
                 placeholder="name@example.com"
                 className="flex h-12 w-full rounded-xl border border-border bg-card px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-shadow hover:shadow-sm"
                 required
+                disabled={isLoading}
               />
             </div>
 
@@ -125,20 +167,32 @@ export default function SignUpPage() {
               </label>
               <input
                 id="password"
+                name="password"
                 type="password"
                 placeholder="••••••••"
                 className="flex h-12 w-full rounded-xl border border-border bg-card px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-shadow hover:shadow-sm"
                 required
                 minLength={8}
+                disabled={isLoading}
               />
             </div>
 
             <button
               type="submit"
-              className="inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-[0.98] mt-4"
+              disabled={isLoading}
+              className="inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-[0.98] mt-4 disabled:opacity-70 disabled:pointer-events-none"
             >
-              Sign Up
-              <ArrowRight className="ml-2 w-4 h-4" />
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                  Creating account...
+                </>
+              ) : (
+                <>
+                  Sign Up
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </>
+              )}
             </button>
           </form>
 
