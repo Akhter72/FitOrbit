@@ -309,5 +309,45 @@ app.delete('/api/members/:id', authMiddleware, async (req: any, res: any) => {
   }
 });
 
+// =======================
+// SETTINGS ENDPOINTS
+// =======================
+app.get('/api/settings/profile', authMiddleware, async (req: any, res: any) => {
+  try {
+    const { gymId } = req.user;
+    const gymRes = await query(`
+      SELECT id, name, owner_name as "ownerName", location, currency, timezone 
+      FROM gyms 
+      WHERE id = $1
+    `, [gymId]);
+
+    if (gymRes.rows.length === 0) return res.status(404).json({ message: "Gym not found" });
+
+    res.json({ gym: gymRes.rows[0] });
+  } catch (e: any) {
+    res.status(500).json({ message: 'Internal server error', error: e.message });
+  }
+});
+
+app.put('/api/settings/profile', authMiddleware, async (req: any, res: any) => {
+  try {
+    const { gymId } = req.user;
+    const { name, ownerName, location, currency, timezone } = req.body;
+
+    const updateRes = await query(`
+      UPDATE gyms 
+      SET name = $1, owner_name = $2, location = $3, currency = $4, timezone = $5, updated_at = NOW()
+      WHERE id = $6 
+      RETURNING id, name, owner_name as "ownerName", location, currency, timezone
+    `, [name, ownerName, location, currency, timezone, gymId]);
+
+    if (updateRes.rows.length === 0) return res.status(404).json({ message: "Gym not found" });
+
+    res.json({ message: 'Settings correctly saved', gym: updateRes.rows[0] });
+  } catch (e: any) {
+    res.status(500).json({ message: 'Internal error', error: e.message });
+  }
+});
+
 const PORT = 4000;
 app.listen(PORT, () => console.log(`✅ FitOrbit Backend (Node.JS + Postgres) listening on port ${PORT}`));

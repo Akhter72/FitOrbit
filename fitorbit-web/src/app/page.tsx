@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Users, CreditCard, Activity, ArrowUpRight, TrendingUp, Loader2, X } from "lucide-react";
+import { Users, CreditCard, Activity, ArrowUpRight, TrendingUp, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import Link from "next/link";
 
 export default function Dashboard() {
   const [stats, setStats] = useState({
@@ -14,17 +15,7 @@ export default function Dashboard() {
   });
   const [recentActivity, setRecentActivity] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [currency, setCurrency] = useState("₹");
-  const [errorMsg, setErrorMsg] = useState("");
-
-  const [formData, setFormData] = useState({
-    email: "",
-    phone: "",
-    amount: "1500"
-  });
 
   useEffect(() => {
     fetchDashboard();
@@ -55,36 +46,6 @@ export default function Dashboard() {
     }
   };
 
-  const submitMember = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setErrorMsg("");
-
-    try {
-      const res = await fetch("/api/members", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
-      });
-      
-      const result = await res.json();
-      
-      if (!res.ok) {
-        setErrorMsg(result.message);
-      } else {
-        // Success
-        setIsModalOpen(false);
-        setFormData({ email: "", phone: "", amount: "1500" });
-        // Auto refresh dashboard immediately!
-        fetchDashboard();
-      }
-    } catch (err: any) {
-      setErrorMsg("Failed to add member.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -107,12 +68,12 @@ export default function Dashboard() {
               Here is what's happening in your gym right now.
             </p>
           </div>
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground px-5 py-2.5 rounded-xl font-medium shadow-md shadow-primary/20 transition-all active:scale-95"
+          <Link 
+            href="/members/add"
+            className="flex items-center justify-center bg-primary hover:bg-primary/90 text-primary-foreground px-5 py-2.5 rounded-xl font-medium shadow-md shadow-primary/20 transition-all active:scale-95"
           >
             + Add New Member
-          </button>
+          </Link>
         </div>
 
         {/* Stats Grid */}
@@ -227,93 +188,6 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-
-      {/* Add Member Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-          <div className="bg-card w-full max-w-md rounded-3xl shadow-2xl border border-border overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-6 border-b border-border/50 bg-secondary/30">
-              <h3 className="text-xl font-semibold">Add New Member</h3>
-              <button 
-                onClick={() => setIsModalOpen(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-secondary/80 text-muted-foreground transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <form onSubmit={submitMember} className="p-6 space-y-5">
-              
-              {errorMsg && (
-                <div className="p-3 bg-destructive/10 text-destructive text-sm font-medium rounded-xl border border-destructive/20">
-                  {errorMsg}
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Member Email</label>
-                <input
-                  type="email"
-                  required
-                  placeholder="member@example.com"
-                  value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  className="w-full h-11 px-3 py-2 bg-background border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary focus:border-primary disabled:opacity-50"
-                  disabled={isSubmitting}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Phone Number</label>
-                <input
-                  type="tel"
-                  placeholder="+1 (555) 000-0000"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                  className="w-full h-11 px-3 py-2 bg-background border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary focus:border-primary disabled:opacity-50"
-                  disabled={isSubmitting}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Initial Payment / Fee</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-muted-foreground font-medium">
-                    {currency}
-                  </div>
-                  <input
-                    type="number"
-                    required
-                    min="0"
-                    placeholder="1500"
-                    value={formData.amount}
-                    onChange={(e) => setFormData({...formData, amount: e.target.value})}
-                    className="w-full h-11 pl-8 px-3 py-2 bg-background border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary focus:border-primary disabled:opacity-50"
-                    disabled={isSubmitting}
-                  />
-                </div>
-              </div>
-
-              <div className="border-t border-border/50 pt-5 mt-2 flex justify-end gap-3">
-                <button 
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  disabled={isSubmitting}
-                  className="px-5 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-secondary transition-colors"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-5 py-2.5 rounded-xl text-sm font-medium shadow-md shadow-primary/20 transition-all active:scale-95 disabled:opacity-70 disabled:pointer-events-none"
-                >
-                  {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                  Register Member
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
     </DashboardLayout>
   );
 }

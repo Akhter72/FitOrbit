@@ -137,11 +137,15 @@ export default function MembersPage() {
                       <tr key={i} className="hover:bg-secondary/20 transition-colors group">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold uppercase
-                              ${isExpired ? 'bg-destructive/10 text-destructive' : 'bg-blue-500/10 text-blue-500'}
-                            `}>
-                              {member.email.charAt(0)}
-                            </div>
+                            {member.profileImage ? (
+                              <img src={member.profileImage} alt="Profile" className="w-10 h-10 rounded-full object-cover border border-border flex-shrink-0" />
+                            ) : (
+                              <div className={`w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center font-bold uppercase
+                                ${isExpired ? 'bg-destructive/10 text-destructive' : 'bg-blue-500/10 text-blue-500'}
+                              `}>
+                                {member.email.charAt(0)}
+                              </div>
+                            )}
                             <div>
                               <p className="font-medium text-foreground group-hover:text-primary transition-colors">
                                 {member.firstName || member.lastName ? `${member.firstName} ${member.lastName}` : member.email.split('@')[0]}
