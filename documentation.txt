@@ -1,0 +1,478 @@
+GYM / TRAINER BUSINESS SAAS
+SYSTEM DOCUMENTATION
+
+---
+
+1. INTRODUCTION
+
+---
+
+This document describes the architecture, features, database schema, and implementation details of the Gym / Trainer Business SaaS platform.
+
+The platform enables gym owners to manage members, trainers, memberships, payments, and attendance using a cloud-based system.
+
+The system is designed as a multi-tenant SaaS product where multiple gyms can use the platform independently.
+
+Primary goals:
+
+• Simplify gym operations
+• Track memberships and payments
+• Manage trainers and members
+• Monitor attendance and analytics
+• Automate reminders and notifications
+
+---
+
+2. TARGET USERS
+
+---
+
+The platform supports three main user roles.
+
+ADMIN (Gym Owner)
+Responsibilities:
+• Manage gym operations
+• Add members and trainers
+• Manage membership plans
+• Track payments
+• View analytics dashboard
+
+TRAINER
+Responsibilities:
+• View assigned members
+• Track client progress
+• Manage training schedules
+
+MEMBER
+Responsibilities:
+• View membership details
+• Check attendance
+• Receive notifications
+• View assigned trainer
+
+---
+
+3. SYSTEM ARCHITECTURE
+
+---
+
+The platform follows a standard modern SaaS architecture.
+
+Frontend Layer
+Web dashboard and mobile application used by users.
+
+API Layer
+Handles business logic and communication between frontend and database.
+
+Backend Services
+Responsible for authentication, data management, and core business operations.
+
+Database Layer
+Stores all persistent data.
+
+Architecture Flow:
+
+Client Application
+|
+REST API
+|
+Backend Services
+|
+Database
+
+---
+
+4. TECHNOLOGY STACK
+
+---
+
+Frontend Web Application
+Next.js
+React
+TypeScript
+TailwindCSS
+
+Mobile Application
+React Native or SwiftUI
+
+Backend
+Node.js
+Express.js or NestJS
+
+Database
+PostgreSQL
+
+ORM
+Prisma
+
+Authentication
+JWT based authentication
+
+Notifications
+SMS
+WhatsApp
+Email
+
+Deployment
+Docker
+AWS
+Vercel
+
+---
+
+5. MULTI TENANT STRUCTURE
+
+---
+
+The system supports multiple gyms using the same platform.
+
+Each gym has isolated data.
+
+Example structure:
+
+Gym A
+Members
+Trainers
+Payments
+
+Gym B
+Members
+Trainers
+Payments
+
+Data isolation is maintained using gym_id in all related tables.
+
+---
+
+6. CORE FEATURES
+
+---
+
+6.1 USER AUTHENTICATION
+
+Users can create accounts and log in securely.
+
+Features:
+User registration
+Login
+Password reset
+Role based access control
+
+User roles include:
+Admin
+Trainer
+Member
+
+---
+
+6.2 GYM MANAGEMENT
+
+Admins can manage their gym profile.
+
+Gym Information includes:
+Gym Name
+Location
+Owner
+Contact Information
+
+---
+
+6.3 MEMBER MANAGEMENT
+
+Admins can manage members using the dashboard.
+
+Features include:
+
+Add new members
+Edit member details
+Delete members
+Search members
+View membership status
+
+Member information stored includes:
+
+Member Name
+Phone Number
+Email
+Membership Plan
+Start Date
+Expiry Date
+Assigned Trainer
+Attendance History
+
+---
+
+6.4 MEMBERSHIP PLANS
+
+Admins can create different membership plans.
+
+Examples include:
+
+Monthly Plan
+3 Month Plan
+6 Month Plan
+Annual Plan
+
+Each plan includes:
+
+Plan Name
+Price
+Duration
+Description
+
+---
+
+6.5 PAYMENT MANAGEMENT
+
+The platform tracks all member payments.
+
+Admins can view:
+
+Payment history
+Pending payments
+Monthly revenue
+
+Payment data includes:
+
+Payment ID
+Member ID
+Amount
+Payment Date
+Payment Method
+Payment Status
+
+---
+
+6.6 ATTENDANCE TRACKING
+
+Members can check in at the gym.
+
+Check-in methods include:
+
+QR code scanning
+Phone number entry
+Mobile app check-in
+
+Attendance information stored includes:
+
+Attendance ID
+Member ID
+Check-in time
+Check-out time
+Date
+
+Attendance data helps admins monitor gym activity.
+
+---
+
+6.7 TRAINER MANAGEMENT
+
+Admins can manage trainers.
+
+Features include:
+
+Add trainers
+Assign members to trainers
+View trainer clients
+
+Trainer information includes:
+
+Trainer Name
+Specialization
+Contact Information
+Assigned Members
+
+---
+
+6.8 NOTIFICATION SYSTEM
+
+The system sends automatic notifications.
+
+Examples include:
+
+Membership expiry reminders
+Payment reminders
+Promotional messages
+
+Notifications can be sent using:
+
+SMS
+WhatsApp
+Email
+
+Example message:
+
+"Your gym membership expires in 3 days. Please renew your plan."
+
+---
+
+6.9 ANALYTICS DASHBOARD
+
+The dashboard provides useful insights.
+
+Metrics include:
+
+Total Members
+Active Members
+Expired Memberships
+Monthly Revenue
+Daily Attendance
+
+Charts and graphs help visualize data.
+
+---
+
+7. DATABASE DESIGN
+
+---
+
+The main database tables include:
+
+Users
+Gyms
+Members
+Trainers
+Membership Plans
+Payments
+Attendance
+Notifications
+
+Relationships:
+
+One Gym
+Many Members
+
+One Gym
+Many Trainers
+
+One Member
+Many Payments
+
+One Member
+Many Attendance Records
+
+---
+
+8. API DESIGN
+
+---
+
+The system exposes REST APIs.
+
+Authentication APIs:
+
+POST /auth/register
+POST /auth/login
+POST /auth/reset-password
+
+Member APIs:
+
+GET /members
+POST /members
+PUT /members/{id}
+DELETE /members/{id}
+
+Payment APIs:
+
+GET /payments
+POST /payments
+
+Attendance APIs:
+
+GET /attendance
+POST /attendance
+
+Trainer APIs:
+
+GET /trainers
+POST /trainers
+PUT /trainers/{id}
+
+---
+
+9. SECURITY CONSIDERATIONS
+
+---
+
+Security is a critical part of the system.
+
+The platform implements:
+
+Secure password hashing
+JWT authentication
+Role based access control
+Input validation
+Rate limiting
+
+Sensitive data is protected and encrypted where necessary.
+
+---
+
+10. SCALABILITY
+
+---
+
+The system is designed to scale.
+
+Strategies include:
+
+Efficient database indexing
+Horizontal backend scaling
+Caching frequently accessed data
+
+The platform should support:
+
+1000+ gyms
+100,000+ members
+
+---
+
+11. DEPLOYMENT STRATEGY
+
+---
+
+Deployment uses modern DevOps practices.
+
+Components:
+
+Docker containers
+Cloud hosting
+Continuous integration pipeline
+
+Environment variables must be used for:
+
+Database credentials
+API keys
+Notification service keys
+
+---
+
+12. FUTURE ENHANCEMENTS
+
+---
+
+Potential future features include:
+
+Workout tracking
+Diet plans
+Personal trainer scheduling
+Mobile member app
+AI based fitness recommendations
+
+These features can expand the platform into a full fitness ecosystem.
+
+---
+
+13. CONCLUSION
+
+---
+
+The Gym / Trainer Business SaaS platform provides a scalable and efficient solution for managing gym operations.
+
+By digitizing membership management, payment tracking, and attendance monitoring, the platform improves operational efficiency for gym owners.
+
+The system is designed to be scalable, secure, and easy to extend as new features are added.
+
+---
+
+## END OF DOCUMENTATION
