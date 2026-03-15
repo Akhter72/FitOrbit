@@ -41,7 +41,7 @@ export default function Dashboard() {
           />
           <StatCard 
             title="Monthly Revenue" 
-            value="$42,500" 
+            value="₹35,50,000" 
             trend="+18%" 
             trendUp={true}
             icon={CreditCard}
@@ -96,11 +96,11 @@ export default function Dashboard() {
             
             <div className="flex-1 flex flex-col gap-5 overflow-y-auto pr-2">
               {[
-                { name: "Sarah Jenkins", action: "Renewed Membership", time: "2 hours ago", amount: "+$120", type: "success" },
-                { name: "Mike Ross", action: "Joined Gym", time: "4 hours ago", amount: "+$150", type: "success" },
-                { name: "David Kim", action: "Payment Failed", time: "5 hours ago", amount: "-$60", type: "error" },
+                { name: "Sarah Jenkins", action: "Renewed Membership", time: "2 hours ago", amount: "+₹10,000", type: "success" },
+                { name: "Mike Ross", action: "Joined Gym", time: "4 hours ago", amount: "+₹12,500", type: "success" },
+                { name: "David Kim", action: "Payment Failed", time: "5 hours ago", amount: "-₹5,000", type: "error" },
                 { name: "Emma Watson", action: "Checked in", time: "6 hours ago", amount: "", type: "neutral" },
-                { name: "John Doe", action: "Joined Gym", time: "8 hours ago", amount: "+$150", type: "success" },
+                { name: "John Doe", action: "Joined Gym", time: "8 hours ago", amount: "+₹12,500", type: "success" },
               ].map((activity, i) => (
                 <div key={i} className="flex items-center gap-4 group">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
