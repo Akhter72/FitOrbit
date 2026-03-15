@@ -13,7 +13,8 @@ export default function Dashboard() {
     monthlyRevenue: 0,
     todayCheckins: 0,
   });
-  const [recentActivity, setRecentActivity] = useState([]);
+  const [revenueData, setRevenueData] = useState<any[]>([]);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currency, setCurrency] = useState("₹");
 
@@ -37,7 +38,8 @@ export default function Dashboard() {
       if (res.ok) {
         const data = await res.json();
         setStats(data.stats);
-        setRecentActivity(data.recentActivity);
+        setRevenueData(data.revenueChart || []);
+        setRecentActivity(data.recentActivity || []);
       }
     } catch (e) {
       console.error("Dashboard failed to load", e);
@@ -45,6 +47,8 @@ export default function Dashboard() {
       setIsLoading(false);
     }
   };
+
+  const maxRevenue = Math.max(...revenueData.map(d => d.value), 1); // Avoid div by zero
 
   if (isLoading) {
     return (
@@ -118,28 +122,46 @@ export default function Dashboard() {
 
         {/* Main Content Area */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Revenue Chart Placeholder */}
+          {/* Revenue Chart */}
           <div className="lg:col-span-2 bg-card border border-border rounded-3xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold">Revenue Analytics</h2>
-              <select className="bg-secondary text-sm px-3 py-1.5 rounded-lg border-none focus:ring-0 cursor-pointer outline-none">
-                <option>This Month</option>
-                <option>Last Month</option>
-                <option>This Year</option>
+              <select className="bg-secondary text-sm px-3 py-1.5 rounded-lg border-none focus:ring-0 cursor-pointer outline-none font-medium">
+                <option>Last 6 Months</option>
               </select>
             </div>
-            {/* Chart Area */}
+            
             <div className="h-72 w-full bg-gradient-to-t from-secondary/50 to-transparent rounded-2xl flex items-center justify-center border border-border/50 border-dashed relative overflow-hidden group">
                <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-primary/10 to-transparent opacity-50"></div>
-               <p className="text-muted-foreground text-sm font-medium z-10 flex items-center gap-2 group-hover:scale-110 transition-transform">
-                 <Activity className="w-5 h-5 text-primary" />
-                 Chart Interface
-               </p>
-               <div className="absolute bottom-0 w-full flex items-end justify-around px-8 h-full z-0 opacity-40 grayscale">
-                 {[40, 70, 45, 90, 65, 80, 55].map((height, i) => (
-                   <div key={i} className="w-12 bg-primary rounded-t-lg transition-all duration-1000 ease-in-out hover:opacity-100" style={{ height: `${height}%` }}></div>
-                 ))}
-               </div>
+               
+               {revenueData.length === 0 ? (
+                 <p className="text-muted-foreground text-sm font-medium z-10 flex items-center gap-2">
+                   <Activity className="w-5 h-5 text-primary" />
+                   No revenue data yet
+                 </p>
+               ) : (
+                <div className="absolute bottom-0 w-full flex items-end justify-around px-2 sm:px-8 h-full z-10 pb-6 pt-10">
+                  {revenueData.map((data, i) => {
+                    // Min 5% height so the bar always shows a sliver
+                    const heightPercent = Math.max((data.value / maxRevenue) * 100, 5);
+                    return (
+                      <div key={i} className="flex flex-col items-center justify-end h-full">
+                        <div className="w-8 sm:w-16 relative group/bar flex items-end justify-center h-full pb-2">
+                           {/* Hover tooltip */}
+                           <div className="absolute -top-10 bg-foreground text-background text-xs font-bold py-1 px-2 rounded opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none">
+                             {currency}{data.value.toLocaleString()}
+                           </div>
+                           <div 
+                             className={`w-full bg-primary rounded-t-lg transition-all duration-1000 ease-out hover:opacity-80`} 
+                             style={{ height: `${heightPercent}%` }}
+                           ></div>
+                        </div>
+                        <span className="text-xs font-medium text-muted-foreground mt-2">{data.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+               )}
             </div>
           </div>
 

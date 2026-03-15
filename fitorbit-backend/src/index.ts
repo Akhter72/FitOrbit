@@ -616,7 +616,7 @@ app.get('/api/dashboard/stats', authMiddleware, async (req: any, res: any) => {
     const { gymId } = req.user;
 
     // Run queries in parallel for performance
-    const [membersCount, activeMembersRes, revenueRes, todayCheckinsRes, recentActivityRes] = await Promise.all([
+    const [membersCount, activeMembersRes, revenueRes, todayCheckinsRes, recentActivityRes, revenueChartRes] = await Promise.all([
       query(`SELECT COUNT(*) as total FROM users WHERE gym_id = $1 AND role = 'MEMBER'`, [gymId]),
       query(`
         SELECT COUNT(*) as active 
@@ -627,20 +627,39 @@ app.get('/api/dashboard/stats', authMiddleware, async (req: any, res: any) => {
       query(`
         SELECT COALESCE(SUM(amount), 0) as revenue 
         FROM payments 
-        WHERE gym_id = $1 AND date_trunc('month', payment_date) = date_trunc('month', CURRENT_DATE)
+        WHERE gym_id = $1 AND date_trunc('month', payment_date) = date_trunc('month', CURRENT_DATE) AND status = 'COMPLETED'
       `, [gymId]),
       query(`
         SELECT COUNT(*) as checkins 
         FROM attendance 
         WHERE gym_id = $1 AND date = CURRENT_DATE
       `, [gymId]),
-      // Get 5 most recent activities (New members + New Payments mixed together conceptually)
+      // Get 5 most recent activities
       query(`
-        SELECT u.first_name || ' ' || u.last_name as name, 'Registered as Member' as action, u.created_at as time, 'success' as type, null as amount
-        FROM users u 
-        WHERE u.gym_id = $1 AND u.role = 'MEMBER'
-        ORDER BY u.created_at DESC
+        SELECT p.id, u.first_name || ' ' || u.last_name as name, 'Paid Subscription' as action, p.payment_date as time, 'success' as type, p.amount
+        FROM payments p
+        JOIN member_profiles m ON p.member_id = m.id
+        JOIN users u ON m.user_id = u.id
+        WHERE p.gym_id = $1 AND p.status = 'COMPLETED'
+        ORDER BY p.payment_date DESC
         LIMIT 5
+      `, [gymId]),
+      // 6-Month Revenue History
+      query(`
+        WITH months AS (
+          SELECT generate_series(
+            date_trunc('month', CURRENT_DATE) - INTERVAL '5 months',
+            date_trunc('month', CURRENT_DATE),
+            '1 month'::interval
+          ) as m
+        )
+        SELECT 
+          to_char(m.m, 'Mon') as label,
+          COALESCE(SUM(p.amount), 0) as value
+        FROM months m
+        LEFT JOIN payments p ON date_trunc('month', p.payment_date) = m.m AND p.gym_id = $1 AND p.status = 'COMPLETED'
+        GROUP BY 1, m.m
+        ORDER BY m.m ASC
       `, [gymId])
     ]);
 
@@ -651,7 +670,11 @@ app.get('/api/dashboard/stats', authMiddleware, async (req: any, res: any) => {
         monthlyRevenue: parseFloat(revenueRes.rows[0].revenue),
         todayCheckins: parseInt(todayCheckinsRes.rows[0].checkins),
       },
-      recentActivity: recentActivityRes.rows // Returning just new members as recent activity for now
+      revenueChart: revenueChartRes.rows.map(r => ({
+        label: r.label,
+        value: parseFloat(r.value)
+      })),
+      recentActivity: recentActivityRes.rows
     });
   } catch (e: any) {
     res.status(500).json({ message: 'Internal error', error: e.message });
