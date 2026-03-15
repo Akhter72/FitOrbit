@@ -2,8 +2,11 @@
 
 import { Dumbbell, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function SignInPage() {
+  const router = useRouter();
+
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-background text-foreground">
       {/* Left side - Branding & Image */}
@@ -64,7 +67,13 @@ export default function SignInPage() {
             <p className="text-muted-foreground">Please enter your details to sign in.</p>
           </div>
 
-          <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+          <form 
+            className="space-y-6" 
+            onSubmit={(e) => {
+              e.preventDefault();
+              router.push("/");
+            }}
+          >
             <div className="space-y-2">
               <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="email">
                 Email
@@ -121,7 +130,7 @@ export default function SignInPage() {
 
           <div className="mt-8 text-center text-sm text-muted-foreground">
             Don't have an account?{" "}
-            <Link href="#" className="font-medium text-primary hover:underline">
+            <Link href="/sign-up" className="font-medium text-primary hover:underline">
               Sign up
             </Link>
           </div>

@@ -1,13 +1,140 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  TRAINER
+  MEMBER
+  SUPER_ADMIN
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum PaymentMethod {
+  CASH
+  CREDIT_CARD
+  BANK_TRANSFER
+  ONLINE
+  UPI
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String   // Hashed password
+  role      Role     @default(MEMBER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  gymId     String?
+  gym       Gym?     @relation(fields: [gymId], references: [id])
+  
+  memberProfile  MemberProfile?
+  trainerProfile TrainerProfile?
+}
+
+model Gym {
+  id          String   @id @default(uuid())
+  name        String
+  location    String?
+  ownerName   String?
+  contactInfo String?
+  currency    String   @default("INR") // Configurable currency, defaults to INR
+  timezone    String   @default("Asia/Kolkata")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+  plans       MembershipPlan[]
+  payments    Payment[]
+  attendance  Attendance[]
+}
+
+model MemberProfile {
+  id             String    @id @default(uuid())
+  userId         String    @unique
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  phone          String?
+  startDate      DateTime?
+  expiryDate     DateTime?
+  
+  trainerId      String?
+  trainer        TrainerProfile?  @relation(fields: [trainerId], references: [id])
+
+  planId         String?
+  plan           MembershipPlan?  @relation(fields: [planId], references: [id])
+
+  payments       Payment[]
+  attendance     Attendance[]
+}
+
+model TrainerProfile {
+  id             String    @id @default(uuid())
+  userId         String    @unique
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  specialization String?
+  phone          String?
+
+  assignedMembers MemberProfile[]
+}
+
+model MembershipPlan {
+  id          String    @id @default(uuid())
+  gymId       String
+  gym         Gym       @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  
+  name        String
+  price       Float
+  duration    Int       // Duration in days or months
+  description String?
+  
+  members     MemberProfile[]
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  gymId         String
+  gym           Gym           @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  
+  memberId      String
+  member        MemberProfile @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  
+  amount        Float
+  paymentDate   DateTime      @default(now())
+  paymentMethod PaymentMethod
+  status        PaymentStatus @default(PENDING)
+}
+
+model Attendance {
+  id          String        @id @default(uuid())
+  gymId       String
+  gym         Gym           @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  
+  memberId    String
+  member      MemberProfile @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  
+  checkIn     DateTime      @default(now())
+  checkOut    DateTime?
+  date        DateTime      @db.Date
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String   // Recipient
+  message   String
+  type      String   // Email, SMS, WhatsApp, In-App
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
 }
